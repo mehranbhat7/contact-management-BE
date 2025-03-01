@@ -8,7 +8,7 @@ const userSignup = async (req, res) => {
   }
   const checkUser = await userSchema.findOne({ email });
   if (checkUser) {
-    res.status(400).json('user already exists');
+    res.status(409).json('user already exists');
   }
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = await userSchema.create({
@@ -25,7 +25,6 @@ const userSignup = async (req, res) => {
     });
   }
 };
-
 const userLogin = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
