@@ -14,5 +14,5 @@ router.get('/all', authToken, getcontacts);
 router.get('/all/:id', authToken, getcontactsbyId);
 router.post('/post', authToken, postContact);
 router.put('/post/:id', authToken, updateContact);
-router.delete('/der/:id', authToken, deleteContact);
+router.delete('/del/:id', authToken, deleteContact);
 module.exports = router;
