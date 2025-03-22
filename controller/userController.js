@@ -1,28 +1,43 @@
 const bcrypt = require('bcrypt');
-const userSchema = require('../models/UserModel');
 const jwt = require('jsonwebtoken');
+const UserModel = require('../models/UserModel');
+
 const userSignup = async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    res.status(400).json('all the fields are necessary');
-  }
-  const checkUser = await userSchema.findOne({ email });
-  if (checkUser) {
-    res.status(400).json('user already exists');
-  }
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = await userSchema.create({
-    name,
-    email,
-    password: hashedPassword,
-  });
-  if (user) {
-    res.status(201).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      password: user.password,
+  try {
+    const { name, email, password } = req.body;
+
+    // Validate input
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Check if user exists
+    const checkUser = await UserModel.findOne({ email });
+    if (checkUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await UserModel.create({
+      name,
+      email,
+      password: hashedPassword,
     });
+
+    if (user) {
+      res.status(201).json({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      });
+    }
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -31,7 +46,7 @@ const userLogin = async (req, res) => {
   if (!email || !password) {
     res.status(404).json('Something is missing');
   }
-  const user = await userSchema.findOne({ email });
+  const user = await UserModel.findOne({ email });
   if (user && (await bcrypt.compare(password, user.password))) {
     const accessToken = await jwt.sign(
       {
